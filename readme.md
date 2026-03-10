@@ -1,5 +1,5 @@
 ## Grupo
-- Bruno
+- Bruno Bagatella
 - Eduardo Henrique dos Santos de Souza Lima
 - Fábio Boemer Figueira
 - Gabriel Oliveira Ventura da Costa
