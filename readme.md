@@ -11,3 +11,6 @@
 - Matheus Benite Disegna
 - Vinícius Muniz Ferraz
 - Sivaldo Castro Araújo Neto
+
+## Tema
+Arquitetura - https://github.com/awesomedata/awesome-public-datasets?tab=readme-ov-file#architecture
