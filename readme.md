@@ -17,5 +17,3 @@ TAN1
 
 ## Tema
 Arquitetura - https://github.com/awesomedata/awesome-public-datasets?tab=readme-ov-file#architecture
-
-## teste
