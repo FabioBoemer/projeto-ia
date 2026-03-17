@@ -10,7 +10,7 @@
 - Lucas Rogério do Couto
 - Matheus Benite Disegna
 - Vinícius Muniz Ferraz
-- Sivaldo Castro Araújo Neto
+- Sivaldo Castro Araújo Neto 212181
 
 ## Tema
 Arquitetura - https://github.com/awesomedata/awesome-public-datasets?tab=readme-ov-file#architecture
