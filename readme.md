@@ -17,3 +17,9 @@ TAN1
 
 ## Tema
 Arquitetura - https://github.com/awesomedata/awesome-public-datasets?tab=readme-ov-file#architecture
+
+## Nome da Empresa:
+Home Swiss Home
+
+## Objetivo:
+Criar um RAG capaz de analisar apartamentos localizados na Suíça e identificar ao usuário quais estão disponíveis, suas características, e definir qual a casa mais adequada para o usuário de acordo com suas preferências.
