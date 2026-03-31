@@ -25,36 +25,40 @@ Arquitetura - https://github.com/awesomedata/awesome-public-datasets?tab=readme-
 Home Swiss Home
 
 ## Objetivo:
-Criar um RAG capaz de analisar apartamentos localizados na Suíça e identificar ao usuário quais estão disponíveis, suas características, e definir qual a casa mais adequada para o usuário de acordo com suas preferências.
+Construir a **base de dados em camadas Medallion (Bronze / Silver / Gold)** sobre o dataset suíço, com **scripts** (ETL e treino de modelo) lendo e gravando no **MinIO**, **metadados e versionamento em PostgreSQL** e **MLflow** registrando experimentos, métricas e artefatos. **Sem API e sem RAG neste ciclo** — foco em dados, pipeline e MLOps leve.
 
 ## Problema de negócio:
-Moradores e interessados em imóveis na Suíça precisam comparar apartamentos além de preço e metragem: iluminação natural, ruído, vista, conectividade do layout etc. Essas informações estão espalhadas em dados técnicos volumosos (geometrias e simulações), difíceis de consultar sem ferramenta. A Home Swiss Home quer oferecer uma forma acessível (ex.: perguntas em linguagem natural via RAG) de explorar características dos apartamentos do dataset e receber explicações alinhadas às preferências do usuário (ex.: “priorizo silêncio à noite” ou “quero muita luz natural”).
+Moradores e interessados em imóveis na Suíça precisam comparar apartamentos além de preço e metragem: iluminação natural, ruído, vista, conectividade do layout etc. Essas informações estão em dados técnicos volumosos (geometrias e simulações). O projeto Consiste em uma **estrutura esses dados**, **governança** e **experimentos de modelagem**.
+                              |
 
-##Requisitos
+### Diagrama (arquitetura até Sprint 4 — sem API / sem RAG)
 
-| ID   | Requisito                                                                                                  |
-| ---- | ---------------------------------------------------------------------------------------------------------- |
-| RF01 | Permitir consulta em linguagem natural sobre apartamentos/cômodos (RAG).                                   |
-| RF02 | Filtrar ou ranquear apartamentos por atributos do `simulations.csv` (ex.: ruído noturno, métricas de sol). |
-| RF03 | Expor metadados de origem (Zenodo, versão, licença CC-BY-4.0).                                             |
-| RF04 | (Futuro) Integrar ou simular “disponibilidade” se o produto for além do dataset estático.                  |
-
-### Diagrama
+Fluxo: **scripts** (local ou container) orquestram ETL e treino; **MinIO** guarda Bronze, Silver e Gold; **MLflow** registra runs e pode armazenar artefatos no mesmo MinIO; **PostgreSQL** serve ao backend do MLflow e às tabelas de metadados do dataset.
 
 ```mermaid
-flowchart LR
-  subgraph users [Usuarios]
-    U[Morador_ou_analista]
+flowchart TB
+  subgraph dev [Maquina local - runs e experimentos]
+    PY[Scripts_LSTM_KNN_ETC]
   end
-  subgraph docker [Rede_Docker]
-    APP[App_ou_Notebook_futuro]
+  subgraph docker [Rede Docker Compose]
+    subgraph minio [MinIO - dados em arquivo Medallão]
+      direction TB
+      BRZ[Bronze]
+      SLV[Silver]
+      GLD[Gold]
+    end
     PG[(PostgreSQL)]
-    S3[MinIO_S3]
-    ML[MLflow_opcional]
+    MLF[MLflow Tracking]
   end
-  U -->|HTTP_ou_notebook| APP
-  APP -->|SQL_metadados| PG
-  APP -->|S3_API_leitura_Gold| S3
-  ML -->|SQL_backend| PG
-  ML -->|S3_artefatos| S3
+  PY -->|leitura_gravação| BRZ
+  PY -->|leitura_gravação| SLV
+  PY -->|leitura_gravação| GLD
+  PY -->|HTTP_tracking| MLF
+  MLF -->|metadados_SQL| PG
+  MLF -->|artefatos_arquivo| GLD
+  PY -->|SQL_Sprint4_metadados| PG
 ```
+
+**Legenda:** igual ao quadro — **runs/experimentos** (scripts: ETL, LSTM, KNN…) trocam dados com **MinIO + Postgres**; **MLflow** guarda **metadados** no Postgres e **artefatos** (modelos, etc.) como arquivos no MinIO.
+
+**O que é “S3” que às vezes aparece nos tutoriais?** É o nome da **API de armazenamento de objetos** da Amazon (Simple Storage Service). O **MinIO** no Docker é um servidor **compatível com essa mesma API**: nos códigos e no MLflow costuma aparecer “S3” mesmo o servidor sendo MinIO. No diagrama acima usamos só **MinIO** para ficar igual ao vocabulário do grupo.
