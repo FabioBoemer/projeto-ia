@@ -26,3 +26,35 @@ Home Swiss Home
 
 ## Objetivo:
 Criar um RAG capaz de analisar apartamentos localizados na Suíça e identificar ao usuário quais estão disponíveis, suas características, e definir qual a casa mais adequada para o usuário de acordo com suas preferências.
+
+## Problema de negócio:
+Moradores e interessados em imóveis na Suíça precisam comparar apartamentos além de preço e metragem: iluminação natural, ruído, vista, conectividade do layout etc. Essas informações estão espalhadas em dados técnicos volumosos (geometrias e simulações), difíceis de consultar sem ferramenta. A Home Swiss Home quer oferecer uma forma acessível (ex.: perguntas em linguagem natural via RAG) de explorar características dos apartamentos do dataset e receber explicações alinhadas às preferências do usuário (ex.: “priorizo silêncio à noite” ou “quero muita luz natural”).
+
+###Requisitos
+
+| ID   | Requisito                                                                                                  |
+| ---- | ---------------------------------------------------------------------------------------------------------- |
+| RF01 | Permitir consulta em linguagem natural sobre apartamentos/cômodos (RAG).                                   |
+| RF02 | Filtrar ou ranquear apartamentos por atributos do `simulations.csv` (ex.: ruído noturno, métricas de sol). |
+| RF03 | Expor metadados de origem (Zenodo, versão, licença CC-BY-4.0).                                             |
+| RF04 | (Futuro) Integrar ou simular “disponibilidade” se o produto for além do dataset estático.                  |
+
+### Diagrama
+
+```mermaid
+flowchart LR
+  subgraph users [Usuarios]
+    U[Morador_ou_analista]
+  end
+  subgraph docker [Rede_Docker]
+    APP[App_ou_Notebook_futuro]
+    PG[(PostgreSQL)]
+    S3[MinIO_S3]
+    ML[MLflow_opcional]
+  end
+  U -->|HTTP_ou_notebook| APP
+  APP -->|SQL_metadados| PG
+  APP -->|S3_API_leitura_Gold| S3
+  ML -->|SQL_backend| PG
+  ML -->|S3_artefatos| S3
+```
