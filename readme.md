@@ -30,7 +30,7 @@ Criar um RAG capaz de analisar apartamentos localizados na Suíça e identificar
 ## Problema de negócio:
 Moradores e interessados em imóveis na Suíça precisam comparar apartamentos além de preço e metragem: iluminação natural, ruído, vista, conectividade do layout etc. Essas informações estão espalhadas em dados técnicos volumosos (geometrias e simulações), difíceis de consultar sem ferramenta. A Home Swiss Home quer oferecer uma forma acessível (ex.: perguntas em linguagem natural via RAG) de explorar características dos apartamentos do dataset e receber explicações alinhadas às preferências do usuário (ex.: “priorizo silêncio à noite” ou “quero muita luz natural”).
 
-###Requisitos
+##Requisitos
 
 | ID   | Requisito                                                                                                  |
 | ---- | ---------------------------------------------------------------------------------------------------------- |
