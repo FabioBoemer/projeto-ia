@@ -60,5 +60,3 @@ flowchart TB
 ```
 
 **Legenda:** igual ao quadro — **runs/experimentos** (scripts: ETL, LSTM, KNN…) trocam dados com **MinIO + Postgres**; **MLflow** guarda **metadados** no Postgres e **artefatos** (modelos, etc.) como arquivos no MinIO.
-
-**O que é “S3” que às vezes aparece nos tutoriais?** É o nome da **API de armazenamento de objetos** da Amazon (Simple Storage Service). O **MinIO** no Docker é um servidor **compatível com essa mesma API**: nos códigos e no MLflow costuma aparecer “S3” mesmo o servidor sendo MinIO. No diagrama acima usamos só **MinIO** para ficar igual ao vocabulário do grupo.
