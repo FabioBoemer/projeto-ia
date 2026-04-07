@@ -22,8 +22,6 @@ A empresa fictícia **Home Swiss Home** precisa estruturar dados técnicos de ap
 
 ## 3. Fontes de dados (referência)
 
-Os arquivos estão **fora** da pasta `projeto-ia` (pasta pai `FACENS/IA` por padrão):
-
 ### 3.1 `geometries.csv`
 
 - **Granularidade:** uma linha por entidade geométrica (ex.: `ROOM`, `BALCONY`, `KITCHEN`).
