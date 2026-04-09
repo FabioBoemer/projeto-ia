@@ -18,10 +18,10 @@ PREFIX_BRONZE = "bronze"
 PREFIX_SILVER = "silver"
 PREFIX_GOLD = "gold"
 
-# Fontes locais (fora de projeto-ia por padrão: pasta pai FACENS/IA)
-_DEFAULT_PARENT = Path(__file__).resolve().parent.parent.parent
-GEOMETRIES_CSV = Path(os.environ.get("GEOMETRIES_CSV", str(_DEFAULT_PARENT / "geometries.csv")))
-SIMULATIONS_CSV = Path(os.environ.get("SIMULATIONS_CSV", str(_DEFAULT_PARENT / "simulations.csv")))
+# Fontes locais: por padrão na raiz do repositório projeto-ia/
+_PROJETO_IA_ROOT = Path(__file__).resolve().parent.parent
+GEOMETRIES_CSV = Path(os.environ.get("GEOMETRIES_CSV", str(_PROJETO_IA_ROOT / "geometries.csv")))
+SIMULATIONS_CSV = Path(os.environ.get("SIMULATIONS_CSV", str(_PROJETO_IA_ROOT / "simulations.csv")))
 
 # PostgreSQL (metadados de pipeline — mesmo host do compose; DB mlflow ou outro)
 PG_URI = os.environ.get(

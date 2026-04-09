@@ -43,7 +43,7 @@ A empresa fictícia **Home Swiss Home** precisa estruturar dados técnicos de ap
 
 **Passos:**
 
-1. Leitura dos arquivos locais (caminhos configuráveis por variável de ambiente ou padrão).
+1. Leitura dos arquivos locais na raiz de **`projeto-ia/`** (`geometries.csv`, `simulations.csv`), ou caminhos definidos por variável de ambiente.
 2. Upload para o **MinIO** (API S3) no bucket `homesswiss` (configurável).
 3. Caminho no objeto: `bronze/<versão>/geometries.csv`, `bronze/<versão>/simulations.csv`.
 4. Cálculo de **SHA-256** por arquivo e tamanho em bytes.
@@ -123,7 +123,8 @@ cd projeto-ia
 py -3.12 -m pip install -r requirements-pipeline.txt
 ```
 
-Definir variáveis se os CSVs não estiverem na pasta pai padrão:
+Por padrão o pipeline lê **`geometries.csv`** e **`simulations.csv`** na **raiz da pasta `projeto-ia`**.  
+Se os arquivos estiverem em outro lugar, defina:
 
 ```powershell
 $env:GEOMETRIES_CSV="C:\caminho\geometries.csv"

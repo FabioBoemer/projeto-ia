@@ -4,3 +4,7 @@ __pycache__/
 venv/
 .env
 *.egg-info/
+
+# Dataset Swiss Dwellings (baixar do Zenodo; arquivos grandes — não commitar no GitHub)
+geometries.csv
+simulations.csv

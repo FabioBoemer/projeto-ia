@@ -7,8 +7,8 @@ Uso (na pasta projeto-ia, com MinIO no ar):
 
 Variáveis úteis:
   DATASET_VERSION=2025-04-05
-  GEOMETRIES_CSV=C:\\caminho\\geometries.csv
-  SIMULATIONS_CSV=C:\\caminho\\simulations.csv
+  GEOMETRIES_CSV=...  (padrão: projeto-ia/geometries.csv)
+  SIMULATIONS_CSV=... (padrão: projeto-ia/simulations.csv)
 """
 from __future__ import annotations
 
