@@ -32,25 +32,28 @@ Com esse projeto, a equipe teve como objetivo a construção de uma pipeline de 
 
 Para tal, os arquivos de dados presentes no dataset serão organizados considerando a arquitetura **Medallion (Camadas Bronze / Silver / Gold)** e armazenados na plataforma **MinIO**. Em seguida, os dados da camada Gold serão utilizados por cinco algoritmos de regressão diferentes, sendo eles: **Regressão Linear**, **Regressão Ridge**, **K-Nearest Neighbors (KNN)**, **Random Forest** e **Extreme Gradient Boosting (XGBoost)**. Todos os modelos treinados ficarão armazenados no **MiniIO** e os seus metadados no **PostgreSQL**. Por fim, a plataforma **MLFlow** permitirá a análise dos modelos armazenados para determinar qual é o mais capaz de prever a qualidade ambiental e o conforto luminoso de um determinado apartamento.
 
-## Dados brutos (fora do Git)
+## Funcionamento:
+### 1. Origem e organização dos dados
+O projeto utilizou os dois arquivos principais presentes no dataset "*Swiss Dwellings*": **`geometries.csv`** e **`simulations.csv`**. 
+- **`geometries.csv`**: Contém os dados estruturais de cada apartamento e a sua localização.
+- **`simulations.csv`**: Contém dados adicionais sobre incidênciade luz solar, poluição sonora e visual, vegetação, entre outros.
 
-Os arquivos **`geometries.csv`** e **`simulations.csv`** não são versionados (`.gitignore`) por serem muito grandes para o GitHub.
+Os dados brutos nesses dois arquivos passam por uma arquitetura **Medallion**, sendo organizados nas camadas **Bronze**, **Silver** e **Gold** e armazenados na plataforma ***MinIO***.
+- **Bronze**: Cópia fiel dos CSVs brutos no *MinIO*, com manifest.json e SHA-256. Gerado o arquivo `bronze/<versão>/`;
+- **Silver**: Dados limpos, tipados e integrados por `apartment_id` e `area_id`. Gerado o arquivo `silver/<versão>/area_features.parquet`;
+- **Gold**: Agregação por apartamento com médias das famílias numéricas. Gerado o arquivo `gold/<versão>/apartment_kpis.parquet`, que será utilizado por todos os modelos a serem treinados;
 
-**Fonte:** dataset **Swiss Dwellings**, obtido por download no **Zenodo**: [https://zenodo.org/records/7070952](https://zenodo.org/records/7070952) — DOI [10.5281/zenodo.7070952](https://doi.org/10.5281/zenodo.7070952). Licença **CC-BY-4.0** (atribuir a fonte ao usar).
 
-**Uso local:** após baixar, coloque os dois CSV na **raiz deste repositório** (`projeto-ia/`), ao lado do `readme.md`, para o pipeline Medallion encontrá-los por padrão. Detalhes em [`docs/MEDALLION_GOVERNANCA.md`](docs/MEDALLION_GOVERNANCA.md).
 
-### Diagrama (arquitetura até Sprint 4 — sem API / sem RAG)
 
-Fluxo: **scripts** (local ou container) orquestram ETL e treino; **MinIO** guarda Bronze, Silver e Gold; **MLflow** registra runs e pode armazenar artefatos no mesmo MinIO; **PostgreSQL** serve ao backend do MLflow e às tabelas de metadados do dataset.
-
+### Diagrama Arquitetural
 ```mermaid
 flowchart TB
   subgraph dev [Maquina local - runs e experimentos]
-    PY[Scripts_LSTM_KNN_ETC]
+    PY[Modelos de treinamento]
   end
   subgraph docker [Rede Docker Compose]
-    subgraph minio [MinIO - dados em arquivo Medallão]
+    subgraph minio [MinIO - dados em arquitetura Medallion]
       direction TB
       BRZ[Bronze]
       SLV[Silver]
@@ -59,18 +62,15 @@ flowchart TB
     PG[(PostgreSQL)]
     MLF[MLflow Tracking]
   end
-  PY -->|leitura_gravação| BRZ
-  PY -->|leitura_gravação| SLV
-  PY -->|leitura_gravação| GLD
+  BRZ --> SLV
+  SLV --> GLD
+  PY <-->|leitura_gravação| GLD
   PY -->|HTTP_tracking| MLF
   MLF -->|metadados_SQL| PG
   MLF -->|artefatos_arquivo| GLD
-  PY -->|SQL_Sprint4_metadados| PG
+  PY -->|metadados_treino| PG
 ```
-
-**Legenda:** igual ao quadro — **runs/experimentos** (scripts: ETL, LSTM, KNN…) trocam dados com **MinIO + Postgres**; **MLflow** guarda **metadados** no Postgres e **artefatos** (modelos, etc.) como arquivos no MinIO.
-
----
+## Resultados
 
 ## Sprint 4 — Modelagem e Treinamento (ML + MLflow)
 
