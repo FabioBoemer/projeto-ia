@@ -166,7 +166,7 @@ py -3.12 -m pipeline.run_pipeline --skip-bronze --skip-silver
 
 ---
 
-## 11. Governança (resumo para entrega acadêmica)
+## 11. Governança
 
 - **Dono dos dados:** time Home Swiss Home (PO + time Scrum).
 - **Versionamento:** pasta `versão` no object storage + manifest Bronze + opcionalmente linhas em `swiss_pipeline_runs`.
