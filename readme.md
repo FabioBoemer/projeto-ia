@@ -22,7 +22,7 @@ TAN1
 **Arquitetura** - Dataset "*Swiss Dwellings*", obtido por download no **Zenodo**: [https://zenodo.org/records/7070952](https://zenodo.org/records/7070952) — DOI [10.5281/zenodo.7070952](https://doi.org/10.5281/zenodo.7070952). Licença **CC-BY-4.0**
 
 ## Nome da Empresa:
-*Home Swiss Home*
+***"Home Swiss Home"***
 
 ## Problema de negócio:
 Durante a busca por um imóvel ideal, moradores e interessados são facilmente atraídos pelas características de preço e metragem de uma determinada propriedade, desconsiderando outros aspectos importantes como a incidência de iluminação natural, poluição sonora e visual, layout, localização, entre outras. Até mesmo os clientes mais observadores que buscam se informar sobre todas essas características podem acabar se deparando com uma falta de informações por parte do vendedor, dificultando uma tomada de decisão certeira.
@@ -44,9 +44,12 @@ Os dados brutos nesses dois arquivos passam por uma arquitetura **Medallion**, s
 - **Gold**: Agregação por apartamento com médias das famílias numéricas. Gerado o arquivo `gold/<versão>/apartment_kpis.parquet`, que será utilizado por todos os modelos a serem treinados;
 
 ### 2. Fluxo de treinamento
+#### 2.1 Problema e Alvos
 O primeiro passo para o treinamento é a definição do problema em que o modelo deverá ser treinado para resolver, considerando os alvos que devem ser obtidos. Como citado no objetivo, os alvos escolhidos são os atributos de **qualidade ambiental (`target_env_quality`)** e **conforto luminoso (`target_light_comfort`)** de cada apartamento. Visto que esses serão números reais contínuos, o problema será uma **Regressão**.
 - **Qualidade ambiental (`target_env_quality`)**: É um índice composto entre 0 e 1. Ele combina três dimensões: luz, vista e ruído. Luz e vista aumentam o índice e o ruído o diminui, pois menor ruído significa maior qualidade ambiental. Sua fórmula conceitual é: $EQ = \\frac{L + V + N_{inv}}{3}$, onde *L* é luz normalizada, *V* é vista normalizada e $N_{inv}$ é 1 menos o ruído normalizado.
 - **Conforto Luminoso (`target_light_comfort`)**: É calculado como a média de todas as colunas `avg__sun_*` da camada Gold, ou seja, uma média da incidência solar no decorrer do dia. Quanto maior o valor, maior a exposição luminosa média simulada.
+#### 2.2 Métricas de avaliação
+
 
 ### 3. Diagrama Arquitetural
 ```mermaid
@@ -74,37 +77,5 @@ flowchart TB
 ```
 ## 4. Resultados
 
-## Sprint 4 — Modelagem e Treinamento (ML + MLflow)
-
-Tudo da modelagem está no pacote [`ml/`](ml/) (treino) + [`pipeline/ml_targets.py`](pipeline/ml_targets.py) (alvos). A defesa completa (justificativa de cada escolha) está em [`docs/ML_TREINO.md`](docs/ML_TREINO.md).
-
-### Resumo do que foi feito
-
-- **Problema:** regressão tabular sobre `gold/<versão>/apartment_kpis.parquet` (1 linha = 1 apartamento).
-- **Alvos** (definidos em [`docs/ML_DEFINICAO_ALVOS.md`](docs/ML_DEFINICAO_ALVOS.md)):
-  - `target_light_comfort` — média das colunas `avg__sun_*`.
-  - `target_env_quality` — índice composto luz + vista + ruído invertido, em `[0, 1]`.
-- **Modelos:** `linear`, `ridge`, `knn`, `rf`, `xgb` (XGBoost). LSTM/TCN foram descartados porque os dados não são série temporal.
-- **Tracking:** MLflow em `http://localhost:5000`, experimento `home_swiss_home`. Artefatos em `s3://mlflow/...` (MinIO).
-
-### Como treinar
-
-1. Subir a infra: `docker compose up -d` e confirmar MLflow em `http://localhost:5000` e MinIO em `http://localhost:9001`.
-2. Garantir que existe a Gold (uma vez): `py -3.12 -m pipeline.run_pipeline --max-rows 50000` (ou completo).
-3. Instalar dependências de ML: `py -3.12 -m pip install -r requirements-ml.txt`.
-4. Rodar a matriz inteira (uma run MLflow por combinação):
-
-```powershell
-py -3.12 -m ml.run_all
-```
-
-Ou um treino isolado:
-
-```powershell
-py -3.12 -m ml.train --target light_comfort --model xgb
-py -3.12 -m ml.train --target env_quality   --model rf
-```
-
-5. Abrir `http://localhost:5000`, experimento **home_swiss_home**, e comparar runs (R², RMSE, MAE, MAPE).
 
 
