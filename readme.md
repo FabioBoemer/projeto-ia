@@ -28,7 +28,7 @@ TAN1
 Durante a busca por um imóvel ideal, moradores e interessados são facilmente atraídos pelas características de preço e metragem de uma determinada propriedade, desconsiderando outros aspectos importantes como a incidência de iluminação natural, poluição sonora e visual, layout, localização, entre outras. Até mesmo os clientes mais observadores que buscam se informar sobre todas essas características podem acabar se deparando com uma falta de informações por parte do vendedor, dificultando uma tomada de decisão certeira.
 
 ## Objetivo:
-Com esse projeto, a equipe teve como objetivo a construção de uma pipeline de treinamento funcional com algoritmos de regressão que utilizam o dataset "*Swiss Dwellings*" como dados de treinamento, tendo como finalidade prever os atributos de **qualidade ambiental (target_env_quality)** e **conforto luminoso (target_light_comfort)** dos apartamentos do dataset. 
+Com esse projeto, a equipe teve como objetivo a construção de uma pipeline de treinamento funcional com algoritmos de regressão que utilizam o dataset "*Swiss Dwellings*" como dados de treinamento, tendo como finalidade prever os atributos de **qualidade ambiental (`target_env_quality`)** e **conforto luminoso (`target_light_comfort`)** dos apartamentos do dataset. 
 
 Para tal, os arquivos de dados presentes no dataset serão organizados considerando a arquitetura **Medallion (Camadas Bronze / Silver / Gold)** e armazenados na plataforma **MinIO**. Em seguida, os dados da camada Gold serão utilizados por cinco algoritmos de regressão diferentes, sendo eles: **Regressão Linear**, **Regressão Ridge**, **K-Nearest Neighbors (KNN)**, **Random Forest** e **Extreme Gradient Boosting (XGBoost)**. Todos os modelos treinados ficarão armazenados no **MiniIO** e os seus metadados no **PostgreSQL**. Por fim, a plataforma **MLFlow** permitirá a análise dos modelos armazenados para determinar qual é o mais capaz de prever a qualidade ambiental e o conforto luminoso de um determinado apartamento.
 
@@ -43,10 +43,12 @@ Os dados brutos nesses dois arquivos passam por uma arquitetura **Medallion**, s
 - **Silver**: Dados limpos, tipados e integrados por `apartment_id` e `area_id`. Gerado o arquivo `silver/<versão>/area_features.parquet`;
 - **Gold**: Agregação por apartamento com médias das famílias numéricas. Gerado o arquivo `gold/<versão>/apartment_kpis.parquet`, que será utilizado por todos os modelos a serem treinados;
 
+### 2. Fluxo de treinamento
+O primeiro passo para o treinamento é a definição do problema em que o modelo deverá ser treinado para resolver, considerando os alvos que devem ser obtidos. Como citado no objetivo, os alvos escolhidos são os atributos de **qualidade ambiental (`target_env_quality`)** e **conforto luminoso (`target_light_comfort`)** de cada apartamento. Visto que esses serão números reais contínuos, o problema será uma **Regressão**.
+- **Qualidade ambiental (`target_env_quality`)**: É um índice composto entre 0 e 1. Ele combina três dimensões: luz, vista e ruído. Luz e vista aumentam o índice e o ruído o diminui, pois menor ruído significa maior qualidade ambiental. Sua fórmula conceitual é: $EQ = \\frac{L + V + N_{inv}}{3}$, onde *L* é luz normalizada, *V* é vista normalizada e $N_{inv}$ é 1 menos o ruído normalizado.
+- **Conforto Luminoso (`target_light_comfort`)**: É calculado como a média de todas as colunas `avg__sun_*` da camada Gold, ou seja, uma média da incidência solar no decorrer do dia. Quanto maior o valor, maior a exposição luminosa média simulada.
 
-
-
-### Diagrama Arquitetural
+### 3. Diagrama Arquitetural
 ```mermaid
 flowchart TB
   subgraph dev [Maquina local - runs e experimentos]
@@ -64,13 +66,13 @@ flowchart TB
   end
   BRZ --> SLV
   SLV --> GLD
-  PY <-->|leitura_gravação| GLD
+  PY <-->|leitura/gravação| GLD
   PY -->|HTTP_tracking| MLF
-  MLF -->|metadados_SQL| PG
-  MLF -->|artefatos_arquivo| GLD
-  PY -->|metadados_treino| PG
+  MLF -->|metadados| PG
+  MLF -->|artefatos| GLD
+  PY -->|metadados| PG
 ```
-## Resultados
+## 4. Resultados
 
 ## Sprint 4 — Modelagem e Treinamento (ML + MLflow)
 
