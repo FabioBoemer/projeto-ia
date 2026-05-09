@@ -49,7 +49,8 @@ O primeiro passo para o treinamento é a definição do problema em que o modelo
 - **Qualidade ambiental (`target_env_quality`)**: É um índice composto entre 0 e 1. Ele combina três dimensões: luz, vista e ruído. Luz e vista aumentam o índice e o ruído o diminui, pois menor ruído significa maior qualidade ambiental. Sua fórmula conceitual é: $EQ = \\frac{L + V + N_{inv}}{3}$, onde *L* é luz normalizada, *V* é vista normalizada e $N_{inv}$ é 1 menos o ruído normalizado.
 - **Conforto Luminoso (`target_light_comfort`)**: É calculado como a média de todas as colunas `avg__sun_*` da camada Gold, ou seja, uma média da incidência solar no decorrer do dia. Quanto maior o valor, maior a exposição luminosa média simulada.
 #### 2.2 Métricas de avaliação
-
+As principais métricas utilizadas para justificar a qualidade de cada modelo foram:
+- **Mean Absolute Error (MAE)**: 
 
 ### 3. Diagrama Arquitetural
 ```mermaid
