@@ -1,7 +1,7 @@
 ## Turma
 TAN1
 
-## PO
+## Product Owner (PO)
 - João Antonio Tonollo da Silva RA: 222652
 
 ## Grupo
@@ -19,16 +19,18 @@ TAN1
 - Sivaldo Castro Araújo Neto RA: 212181
 
 ## Tema
-Arquitetura - https://github.com/awesomedata/awesome-public-datasets?tab=readme-ov-file#architecture
+**Arquitetura** - Dataset "*Swiss Dwellings*", obtido por download no **Zenodo**: [https://zenodo.org/records/7070952](https://zenodo.org/records/7070952) — DOI [10.5281/zenodo.7070952](https://doi.org/10.5281/zenodo.7070952). Licença **CC-BY-4.0**
 
 ## Nome da Empresa:
-Home Swiss Home
-
-## Objetivo:
-Construir a **base de dados em camadas Medallion (Bronze / Silver / Gold)** sobre o dataset suíço, com **scripts** (ETL e treino de modelo) lendo e gravando no **MinIO**, **metadados e versionamento em PostgreSQL** e **MLflow** registrando experimentos, métricas e artefatos. **Sem API e sem RAG neste ciclo** — foco em dados, pipeline e MLOps leve.
+*Home Swiss Home*
 
 ## Problema de negócio:
-Moradores e interessados em imóveis na Suíça precisam comparar apartamentos além de preço e metragem: iluminação natural, ruído, vista, conectividade do layout etc. Essas informações estão em dados técnicos volumosos (geometrias e simulações). O projeto consiste em **estruturar esses dados**, **governança** e **experimentos de modelagem**.
+Durante a busca por um imóvel ideal, moradores e interessados são facilmente atraídos pelas características de preço e metragem de uma determinada propriedade, desconsiderando outros aspectos importantes como a incidência de iluminação natural, poluição sonora e visual, layout, localização, entre outras. Até mesmo os clientes mais observadores que buscam se informar sobre todas essas características podem acabar se deparando com uma falta de informações por parte do vendedor, dificultando uma tomada de decisão certeira.
+
+## Objetivo:
+Com esse projeto, a equipe teve como objetivo a construção de uma pipeline de treinamento funcional com algoritmos de regressão que utilizam o dataset "*Swiss Dwellings*" como dados de treinamento, tendo como finalidade prever os atributos de **qualidade ambiental (target_env_quality)** e **conforto luminoso (target_light_comfort)** dos apartamentos do dataset. 
+
+Para tal, os arquivos de dados presentes no dataset serão organizados considerando a arquitetura **Medallion (Camadas Bronze / Silver / Gold)** e armazenados na plataforma **MinIO**. Em seguida, os dados da camada Gold serão utilizados por cinco algoritmos de regressão diferentes, sendo eles: **Regressão Linear**, **Regressão Ridge**, **K-Nearest Neighbors (KNN)**, **Random Forest** e **Extreme Gradient Boosting (XGBoost)**. Todos os modelos treinados ficarão armazenados no **MiniIO** e os seus metadados no **PostgreSQL**. Por fim, a plataforma **MLFlow** permitirá a análise dos modelos armazenados para determinar qual é o mais capaz de prever a qualidade ambiental e o conforto luminoso de um determinado apartamento.
 
 ## Dados brutos (fora do Git)
 
