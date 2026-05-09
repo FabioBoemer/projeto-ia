@@ -30,13 +30,13 @@ Durante a busca por um imóvel ideal, moradores e interessados são facilmente a
 ## Objetivo:
 Com esse projeto, a equipe teve como objetivo a construção de uma pipeline de treinamento funcional com algoritmos de regressão que utilizam o dataset "*Swiss Dwellings*" como dados de treinamento, tendo como finalidade prever os atributos de **qualidade ambiental (`target_env_quality`)** e **conforto luminoso (`target_light_comfort`)** dos apartamentos do dataset. 
 
-Para tal, os arquivos de dados presentes no dataset serão organizados considerando a arquitetura **Medallion (Camadas Bronze / Silver / Gold)** e armazenados na plataforma **MinIO**. Em seguida, os dados da camada Gold serão utilizados por cinco algoritmos de regressão diferentes, sendo eles: **Regressão Linear**, **Regressão Ridge**, **K-Nearest Neighbors (KNN)**, **Random Forest** e **Extreme Gradient Boosting (XGBoost)**. Todos os modelos treinados ficarão armazenados no **MiniIO** e os seus metadados no **PostgreSQL**. Por fim, a plataforma **MLFlow** permitirá a análise dos modelos armazenados para determinar qual é o mais capaz de prever a qualidade ambiental e o conforto luminoso de um determinado apartamento.
+Para tal, os arquivos de dados presentes no dataset serão organizados considerando a arquitetura **Medallion (Camadas Bronze / Silver / Gold)** e armazenados na plataforma **MinIO**. Em seguida, os dados da camada Gold serão utilizados por cinco algoritmos de regressão diferentes, sendo eles: **Regressão Linear**, **Regressão Ridge**, **K-Nearest Neighbors (KNN)**, **Random Forest** e **Extreme Gradient Boosting (XGBoost)**. Todos os modelos treinados ficarão armazenados no **MiniIO** e os seus metadados no **PostgreSQL**. Por fim, a plataforma **MLFlow** permitirá a análise das métricas de cada modelo armazenado para determinar qual é o mais capaz de prever a qualidade ambiental e o conforto luminoso de um determinado apartamento.
 
 ## Funcionamento:
 ### 1. Origem e organização dos dados
 O projeto utilizou os dois arquivos principais presentes no dataset "*Swiss Dwellings*": **`geometries.csv`** e **`simulations.csv`**. 
-- **`geometries.csv`**: Contém os dados estruturais de cada apartamento e a sua localização.
-- **`simulations.csv`**: Contém dados adicionais sobre incidênciade luz solar, poluição sonora e visual, vegetação, entre outros.
+- **`geometries.csv`**: Contém os dados estruturais de cada apartamento e a sua localização;
+- **`simulations.csv`**: Contém dados adicionais sobre incidênciade luz solar, poluição sonora e visual, vegetação, entre outros;
 
 Os dados brutos nesses dois arquivos passam por uma arquitetura **Medallion**, sendo organizados nas camadas **Bronze**, **Silver** e **Gold** e armazenados na plataforma ***MinIO***.
 - **Bronze**: Cópia fiel dos CSVs brutos no *MinIO*, com manifest.json e SHA-256. Gerado o arquivo `bronze/<versão>/`;
@@ -46,11 +46,22 @@ Os dados brutos nesses dois arquivos passam por uma arquitetura **Medallion**, s
 ### 2. Fluxo de treinamento
 #### 2.1 Problema e Alvos
 O primeiro passo para o treinamento é a definição do problema em que o modelo deverá ser treinado para resolver, considerando os alvos que devem ser obtidos. Como citado no objetivo, os alvos escolhidos são os atributos de **qualidade ambiental (`target_env_quality`)** e **conforto luminoso (`target_light_comfort`)** de cada apartamento. Visto que esses serão números reais contínuos, o problema será uma **Regressão**.
-- **Qualidade ambiental (`target_env_quality`)**: É um índice composto entre 0 e 1. Ele combina três dimensões: luz, vista e ruído. Luz e vista aumentam o índice e o ruído o diminui, pois menor ruído significa maior qualidade ambiental. Sua fórmula conceitual é: $EQ = \\frac{L + V + N_{inv}}{3}$, onde *L* é luz normalizada, *V* é vista normalizada e $N_{inv}$ é 1 menos o ruído normalizado.
-- **Conforto Luminoso (`target_light_comfort`)**: É calculado como a média de todas as colunas `avg__sun_*` da camada Gold, ou seja, uma média da incidência solar no decorrer do dia. Quanto maior o valor, maior a exposição luminosa média simulada.
+- **Qualidade ambiental (`target_env_quality`)**: É um índice composto entre 0 e 1. Ele combina três dimensões: luz, vista e ruído. Luz e vista aumentam o índice e o ruído o diminui, pois menor ruído significa maior qualidade ambiental. Sua fórmula conceitual é: $EQ = \\frac{L + V + N_{inv}}{3}$, onde *L* é luz normalizada, *V* é vista normalizada e $N_{inv}$ é 1 menos o ruído normalizado;
+- **Conforto Luminoso (`target_light_comfort`)**: É calculado como a média de todas as colunas `avg__sun_*` da camada Gold, ou seja, uma média da incidência solar no decorrer do dia. Quanto maior o valor, maior a exposição luminosa média simulada;
 #### 2.2 Métricas de avaliação
 As principais métricas utilizadas para justificar a qualidade de cada modelo foram:
-- **Mean Absolute Error (MAE)**: 
+- **Mean Absolute Error (MAE)**: Mede a magnitude média dos erros em um conjunto de previsões. Fácil de interpretar;
+- **Root Mean Square Error (RMSE)**: Mede a diferença média entre valores previstos e observados, penalizando mais os erros;
+- **Coeficiente de Determinação ($R^2$)**: Indica o quão bem o modelo explica a variância dos dados observados. É a métrica principal para determinar a qualidade do modelo, visto que indica o quão **generalista** ele é;
+- **Mean Absolute Percentage Error (MAPE)**: Indica o quão distantes as previsões estão dos valores reais, em porcentagem;
+#### 2.3 Modelos de Treinamento
+Os modelos utilizados para o treinamento foram:
+- **Regressão Linear**: Modelo simples e interpretável, serve como base para determinar o desempenho mínimo esperado dos outros modelos;
+- **Regressão Ridge**: Linear com regularização L2, útil com colunas correlacionadas, útil para testar se a regularização melhora estabilidade;
+- **K-Nearest Neighbors (KNN)**: Modelo não-paramétrico baseado em vizinhança, captura padrões locais sem assumir forma linear;
+- **Random Forest**: Conjunto de árvores robusto a não-linearidades e interações, bom modelo para tabular;
+- **Extreme Gradient Boosting (XGBoost)**: Booster de árvores, é o estado da arte em dados tabulares, sendo o modelo de maior capacidade preditiva;
+#### 2.4 Runs e o papel do MLFlow
 
 ### 3. Diagrama Arquitetural
 ```mermaid
