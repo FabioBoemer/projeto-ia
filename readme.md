@@ -68,4 +68,39 @@ flowchart TB
 
 **Legenda:** igual ao quadro — **runs/experimentos** (scripts: ETL, LSTM, KNN…) trocam dados com **MinIO + Postgres**; **MLflow** guarda **metadados** no Postgres e **artefatos** (modelos, etc.) como arquivos no MinIO.
 
+---
+
+## Sprint 4 — Modelagem e Treinamento (ML + MLflow)
+
+Tudo da modelagem está no pacote [`ml/`](ml/) (treino) + [`pipeline/ml_targets.py`](pipeline/ml_targets.py) (alvos). A defesa completa (justificativa de cada escolha) está em [`docs/ML_TREINO.md`](docs/ML_TREINO.md).
+
+### Resumo do que foi feito
+
+- **Problema:** regressão tabular sobre `gold/<versão>/apartment_kpis.parquet` (1 linha = 1 apartamento).
+- **Alvos** (definidos em [`docs/ML_DEFINICAO_ALVOS.md`](docs/ML_DEFINICAO_ALVOS.md)):
+  - `target_light_comfort` — média das colunas `avg__sun_*`.
+  - `target_env_quality` — índice composto luz + vista + ruído invertido, em `[0, 1]`.
+- **Modelos:** `linear`, `ridge`, `knn`, `rf`, `xgb` (XGBoost). LSTM/TCN foram descartados porque os dados não são série temporal.
+- **Tracking:** MLflow em `http://localhost:5000`, experimento `home_swiss_home`. Artefatos em `s3://mlflow/...` (MinIO).
+
+### Como treinar
+
+1. Subir a infra: `docker compose up -d` e confirmar MLflow em `http://localhost:5000` e MinIO em `http://localhost:9001`.
+2. Garantir que existe a Gold (uma vez): `py -3.12 -m pipeline.run_pipeline --max-rows 50000` (ou completo).
+3. Instalar dependências de ML: `py -3.12 -m pip install -r requirements-ml.txt`.
+4. Rodar a matriz inteira (uma run MLflow por combinação):
+
+```powershell
+py -3.12 -m ml.run_all
+```
+
+Ou um treino isolado:
+
+```powershell
+py -3.12 -m ml.train --target light_comfort --model xgb
+py -3.12 -m ml.train --target env_quality   --model rf
+```
+
+5. Abrir `http://localhost:5000`, experimento **home_swiss_home**, e comparar runs (R², RMSE, MAE, MAPE).
+
 
