@@ -88,6 +88,10 @@ flowchart TB
   PY -->|metadados| PG
 ```
 ## 4. Resultados
+Ao final dos treinamentos, foram analisadas as métricas $R^2$ resultantes, buscando definir o melhor modelo para prever cada alvo.  Asconclusões obtidas foram:
+- **Qualidade Ambiental**: *Random Forest*, $R^2$ = 0,7429;
+- **Conforto Luminoso**: *XGBoost*, $R^2$ = 0,9759;
 
+O alvo de **conforto luminoso (`target_light_comfort`)** teve desempenho muito alto porque há várias features correlacionadas com conforto de luz mesmo após remover avg__sun_*. Já a **qualidade ambiental (`target_env_quality`)** foi mais difícil de prever, pois as famílias que compõem o índice foram bloqueadas, restando conectividade, layout, ruído de janela e contagem de áreas.
 
 
