@@ -62,7 +62,7 @@ Os modelos utilizados para o treinamento foram:
 - **Random Forest**: Conjunto de árvores robusto a não-linearidades e interações, bom modelo para tabular;
 - **Extreme Gradient Boosting (XGBoost)**: Booster de árvores, é o estado da arte em dados tabulares, sendo o modelo de maior capacidade preditiva;
 #### 2.4 Runs e o papel do MLFlow
-
+O treinamento pode ser iniciado pelas funções 
 ### 3. Diagrama Arquitetural
 ```mermaid
 flowchart TB
