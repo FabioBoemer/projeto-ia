@@ -1,6 +1,4 @@
-# Sprint 4 — Modelagem, Treinamento e Tracking (MLflow)
-
-Este documento é a **defesa técnica** do Sprint 4 do projeto **Home Swiss Home** (FACENS — TAN1). Está organizado para servir como roteiro de apresentação para o professor: cada seção responde a uma pergunta esperada na banca.
+# Modelagem, Treinamento e Tracking (MLflow)
 
 ---
 
@@ -10,7 +8,7 @@ Este documento é a **defesa técnica** do Sprint 4 do projeto **Home Swiss Home
 
 - **Fonte primária:** dataset **Swiss Dwellings** (Zenodo, registro [7070952](https://zenodo.org/records/7070952), DOI [10.5281/zenodo.7070952](https://doi.org/10.5281/zenodo.7070952), licença **CC-BY-4.0**).
 - **Arquivos brutos:** `geometries.csv` (uma linha por entidade geométrica, com a coluna `geometry` em WKT) e `simulations.csv` (uma linha por área, com famílias `sun_*`, `noise_*`, `view_*`, `connectivity_*`, `layout_*`, `window_noise_*`).
-- **O que o pipeline Medallion fez antes (Sprint 3):**
+- **Pipeline Medallion:**
   - **Bronze:** subiu os CSVs brutos para `s3://homesswiss/bronze/<versão>/` no MinIO + `manifest.json` com SHA-256 (ver [`pipeline/bronze.py`](../pipeline/bronze.py)).
   - **Silver:** uma linha por **(apartment_id, area_id)** — métricas de simulação tipadas + `geometry_entity_count`, escrito como `silver/<versão>/area_features.parquet` (Snappy, streaming) — ver [`pipeline/silver.py`](../pipeline/silver.py).
   - **Gold:** **uma linha por apartamento**, com colunas `avg__<família>__<sub>` (média) + `n_areas_in_sample`, em `gold/<versão>/apartment_kpis.parquet` — ver [`pipeline/gold.py`](../pipeline/gold.py).
@@ -21,11 +19,11 @@ Este documento é a **defesa técnica** do Sprint 4 do projeto **Home Swiss Home
 |---|---|---|
 | **Regressão** | **SIM (escolhido)** | Os alvos são **valores contínuos** por apartamento: `light_comfort` é uma média de iluminação (klx) e `env_quality_score` é um índice em `[0, 1]`. Nenhum dos dois é uma categoria. |
 | Classificação | Não (sem retrabalho) | Não temos rótulo categórico no Swiss Dwellings. Para virar classificação seria preciso **binarizar** o índice (ex.: alto/baixo conforto), o que descarta informação numérica útil e exigiria justificar um corte arbitrário. |
-| Série temporal | **NÃO** | A Gold tem **uma linha por apartamento** (sem eixo temporal). Os campos `sun_*` já são o resultado de simulações ao longo de cenários — eles **não** trazem timestamps por apartamento. Por isso `LSTM`/`TCN` (sugeridos no PDF) **não se aplicam** a este dataset, e seriam um erro técnico forçar essa modelagem. |
+| Série temporal | **NÃO** | A Gold tem **uma linha por apartamento** (sem eixo temporal). Os campos `sun_*` já são o resultado de simulações ao longo de cenários — eles **não** trazem timestamps por apartamento. Por isso `LSTM`/`TCN` **não se aplicam** a este dataset, e seriam um erro técnico forçar essa modelagem. |
 
-> **Frase de defesa:** *"Definimos o problema como regressão tabular porque, após o pipeline Medallion, a Gold entrega exatamente uma observação por apartamento e os alvos são contínuos. Séries temporais foram descartadas porque o Swiss Dwellings não traz eixo temporal — os cenários `sun_*` já vêm pré-agregados."*
+Definiu-se o problema como regressão tabular porque, após o pipeline Medallion, a Gold entrega exatamente uma observação por apartamento e os alvos são contínuos. Séries temporais foram descartadas porque o Swiss Dwellings não traz eixo temporal — os cenários `sun_*` já vêm pré-agregados.
 
-### 1.3 Alvos definidos (formal)
+### 1.3 Alvos definidos
 
 Definidos em [`docs/ML_DEFINICAO_ALVOS.md`](ML_DEFINICAO_ALVOS.md) e implementados em [`pipeline/ml_targets.py`](../pipeline/ml_targets.py).
 
@@ -41,36 +39,34 @@ Definidos em [`docs/ML_DEFINICAO_ALVOS.md`](ML_DEFINICAO_ALVOS.md) e implementad
 
 ## 2. Features (X) — sem vazamento
 
-A função `add_ml_targets` cria os alvos. Para montar `X`, usamos os helpers que **excluem** as colunas que compõem o alvo:
+A função `add_ml_targets` cria os alvos. Para montar `X`, utilizam-se os helpers que **excluem** as colunas que compõem o alvo:
 
 - `feature_columns_for_light_comfort(df)` — exclui `apartment_id`, alvos derivados e **toda** a família `avg__sun_*`. Resultado típico: `avg__noise_*`, `avg__view_*`, `avg__connectivity_*`, `avg__layout_*`, `avg__window_noise_*`, `n_areas_in_sample`.
 - `feature_columns_for_env_quality(df)` — exclui também `avg__view_*` e `avg__noise_*` (porque entram direto no índice). Resultado típico: `avg__connectivity_*`, `avg__layout_*`, `avg__window_noise_*`, `n_areas_in_sample`.
 
-> **Por que isso importa na defesa:** se incluíssemos `avg__sun_*` como feature ao prever `light_comfort`, o R² ficaria artificialmente próximo de 1.0 (vazamento). O código **bloqueia** essa armadilha por construção.
+O helpers são importantes, pois se fossem incluídos `avg__sun_*` como feature ao prever `light_comfort`, o R² ficaria artificialmente próximo de 1.0 (vazamento). O código **bloqueia** essa armadilha por construção.
 
 ---
 
-## 3. Seleção de modelos — por que estes cinco
+## 3. Seleção de modelos
 
 A seleção mistura **interpretáveis** (baseline de defesa) e **não-lineares de alto desempenho** (para realmente medir ganho). Todos rodam em `Pipeline` sklearn com `SimpleImputer(median)` e, quando aplicável, `StandardScaler` — para tratar `NaN` e diferenças de escala entre famílias `avg__*`.
 
 | Modelo | Por que está aqui | Hiperparâmetros (default) |
 |---|---|---|
 | **LinearRegression** | Baseline interpretável (coeficientes por feature). Se o problema for quase linear, ele já entrega. | — |
-| **Ridge** | Regularização L2 — esperamos forte multicolinearidade entre colunas `avg__*` da mesma família. Reduz variância sem perder a estrutura linear. | `alpha=1.0` |
-| **KNeighborsRegressor** | Não-paramétrico, captura vizinhança no espaço de features padronizadas. Está no diagrama do `readme.md` (família KNN). | `n_neighbors=10`, `weights="distance"` |
-| **RandomForestRegressor** | Robusto, lida com não-linearidade e interações sem feature engineering pesada. Bom "plano B" do XGBoost. | `n_estimators=300`, `min_samples_leaf=2` |
-| **XGBoost** | Estado da arte em tabular. Sugerido explicitamente no enunciado do Sprint 4. | `n_estimators=400`, `max_depth=6`, `lr=0.05`, `tree_method="hist"` |
+| **Ridge** | Regularização L2 — espera-se forte multicolinearidade entre colunas `avg__*` da mesma família. Reduz variância sem perder a estrutura linear. | `alpha=1.0` |
+| **KNeighborsRegressor** | Não-paramétrico, captura vizinhança no espaço de features padronizadas. | `n_neighbors=10`, `weights="distance"` |
+| **RandomForestRegressor** | Robusto, lida com não-linearidade e interações sem feature engineering pesada. | `n_estimators=300`, `min_samples_leaf=2` |
+| **XGBoost** | Estado da arte em tabular.| `n_estimators=400`, `max_depth=6`, `lr=0.05`, `tree_method="hist"` |
 
-> **Frase de defesa:** *"Comparamos cinco modelos em ordem crescente de capacidade — Linear → Ridge → KNN → Random Forest → XGBoost — para evidenciar quanto **ganho real** os modelos não-lineares trazem em relação ao baseline. Todos passam pelo mesmo pré-processamento (imputação por mediana e padronização quando o modelo é sensível a escala), garantindo comparabilidade."*
-
-> **Por que LSTM/TCN ficaram de fora:** ver Seção 1.2.
+Comparam-se os cinco modelos em ordem crescente de capacidade — Linear → Ridge → KNN → Random Forest → XGBoost — para evidenciar quanto **ganho real** os modelos não-lineares trazem em relação ao baseline. Todos passam pelo mesmo pré-processamento (imputação por mediana e padronização quando o modelo é sensível a escala), garantindo comparabilidade.
 
 ---
 
-## 4. Métricas — por que estas quatro
+## 4. Métricas
 
-Para cada run logamos **MAE, RMSE, R² e MAPE**:
+Para cada run foram logadas as métricas **MAE, RMSE, R² e MAPE**:
 
 | Métrica | O que mede | Quando olhar |
 |---|---|---|
@@ -99,13 +95,13 @@ Cada execução do `ml/train.py` cria **uma run** dentro do experimento `home_sw
 
 ### Por que este desenho
 
-1. **Reprodutibilidade:** logamos `dataset_version` + `source` + `random_state` em cada run. Dado o mesmo Parquet Gold, qualquer pessoa reproduz a métrica.
+1. **Reprodutibilidade:** são logados `dataset_version` + `source` + `random_state` em cada run. Dado o mesmo Parquet Gold, qualquer pessoa reproduz a métrica.
 2. **Comparabilidade:** o experimento único `home_swiss_home` permite filtrar por `target` e ranquear por R² na UI do MLflow.
-3. **Governança leve:** o `feature_list.txt` artefato comprova **quais colunas entraram em X** — fechando o ciclo de governança do Sprint 3 (Bronze/Silver/Gold) com auditoria de modelo no Sprint 4.
+3. **Governança leve:** o `feature_list.txt` artefato comprova **quais colunas entraram em X**.
 
 ---
 
-## 6. Como reproduzir (passo a passo da defesa ao vivo)
+## 6. Execução da pipeline de treino
 
 ```powershell
 # 1) Infra
