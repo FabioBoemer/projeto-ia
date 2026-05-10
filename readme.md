@@ -62,7 +62,7 @@ Os modelos utilizados para o treinamento foram:
 - **Random Forest**: Conjunto de árvores robusto a não-linearidades e interações, bom modelo para tabular;
 - **Extreme Gradient Boosting (XGBoost)**: Booster de árvores, é o estado da arte em dados tabulares, sendo o modelo de maior capacidade preditiva;
 #### 2.4 Runs e o papel do MLFlow
-O treinamento pode ser iniciado pelas funções 
+O treinamento pode ser iniciado pelos scripts [`ml/train.py`](train.py) (treina um modelo específico) e [`ml/run_all.py`](run_all.py) (treina todos os modelos definidos). Cada execução de treino cria uma run no experimento home_swiss_home, registrado no **MlFlow**, junto das tags, parâmetros, métricas, artefatos de dataset e o modelo serializado como Logged Model.
 ### 3. Diagrama Arquitetural
 ```mermaid
 flowchart TB
