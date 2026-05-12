@@ -1,6 +1,10 @@
 # Definição dos alvos de ML — conforto de luz e qualidade ambiental
 
-Documento para o **Sprint 4** (regressão com scikit-learn + MLflow). As definições abaixo batem com o código em [`pipeline/ml_targets.py`](../pipeline/ml_targets.py).
+- **Conforto de luz:** A média aritmética de todas as variáveis `avg__sun_*` disponíveis na camada Gold por apartamento, refletindo o padrão médio de iluminação simulada (klx) ao longo dos cenários do Swiss Dwellings.
+
+- **Qualidade ambiental:** Um índice composto entre 0 e 1 combinando, com pesos iguais, a luminosidade média, a visibilidade média (`view_*`) e o ruído médio em área (`noise_*`), após normalização min–max e inversão do ruído para que valores menores de dBA aumentem o índice.
+
+As definições abaixo batem com o código em [`pipeline/ml_targets.py`](../pipeline/ml_targets.py).
 
 **Fonte dos dados:** camada **Gold** `apartment_kpis.parquet` (uma linha por `apartment_id`, colunas `avg__*` vindas da média por apartamento na Silver).
 
