@@ -83,11 +83,7 @@ X2 = df[feature_columns_for_env_quality(df)]
 
 ---
 
-## 4. O que escrever no relatório (parágrafos prontos)
 
-**Conforto de luz:** *“Definimos o alvo como a média aritmética de todas as variáveis `avg__sun_*` disponíveis na camada Gold por apartamento, refletindo o padrão médio de iluminação simulada (klx) ao longo dos cenários do Swiss Dwellings.”*
-
-**Qualidade ambiental:** *“Definimos um índice composto entre 0 e 1 combinando, com pesos iguais, a luminosidade média, a visibilidade média (`view_*`) e o ruído médio em área (`noise_*`), após normalização min–max e inversão do ruído para que valores menores de dBA aumentem o índice.”*
 
 ---
 
